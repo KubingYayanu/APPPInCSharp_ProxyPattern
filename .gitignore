@@ -1,0 +1,6 @@
+.vs/
+APPPInCSharp_ProxyPattern.Console/bin/
+APPPInCSharp_ProxyPattern.Console/obj/
+APPPInCSharp_ProxyPattern.UnitTests/bin/
+APPPInCSharp_ProxyPattern.UnitTests/obj/
+packages/
