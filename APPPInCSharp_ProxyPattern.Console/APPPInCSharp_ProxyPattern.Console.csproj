@@ -44,6 +44,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DB.cs" />
+    <Compile Include="Item.cs" />
+    <Compile Include="ItemData.cs" />
+    <Compile Include="Order.cs" />
+    <Compile Include="OrderData.cs" />
+    <Compile Include="OrderImpl.cs" />
+    <Compile Include="OrderProxy.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="ProductData.cs" />
     <Compile Include="ProductImpl.cs" />

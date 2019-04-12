@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -14,6 +15,8 @@ namespace APPPInCSharp_ProxyPattern
             connection = new SqlConnection(connectionString);
             connection.Open();
         }
+
+        #region Product
 
         public static void Store(ProductData pd)
         {
@@ -76,6 +79,103 @@ namespace APPPInCSharp_ProxyPattern
             SqlCommand command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@sku", sku);
             return command;
+        }
+
+        #endregion Product
+
+        #region Order
+
+        public static OrderData NewOrder(string customerId)
+        {
+            string sql = @"INSERT INTO Orders (cusId) VALUES (@cusId);
+                            SELECT scope_identity()";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@cusId", customerId);
+            int newOrderId = Convert.ToInt32(command.ExecuteScalar());
+            return new OrderData(newOrderId, customerId);
+        }
+
+        public static OrderData GetOrderData(int orderId)
+        {
+            string sql = @"SELECT cusId FROM Orders WHERE orderId = @orderId";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@orderId", orderId);
+            IDataReader reader = command.ExecuteReader();
+
+            OrderData od = null;
+
+            if (reader.Read())
+            {
+                od = new OrderData(orderId, reader["cusId"].ToString());
+            }
+            reader.Close();
+            return od;
+        }
+
+        #endregion Order
+
+        #region Item
+
+        public static void Store(ItemData id)
+        {
+            SqlCommand command = BuildItemInsersionStatement(id);
+            command.ExecuteNonQuery();
+        }
+
+        private static SqlCommand BuildItemInsersionStatement(ItemData id)
+        {
+            string sql = @"INSERT INTO Items (orderId, quantity, sku) VALUES (@orderId, @quantity, @sku)";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@orderId", id.orderId);
+            command.Parameters.AddWithValue("@quantity", id.qty);
+            command.Parameters.AddWithValue("@sku", id.sku);
+            return command;
+        }
+
+        public static ItemData[] GetItemsForOrder(int orderId)
+        {
+            SqlCommand command = BuildItemsForOrderQueryStatement(orderId);
+            IDataReader reader = command.ExecuteReader();
+            ItemData[] id = ExtractItemDataFromResultSet(reader);
+            reader.Close();
+            return id;
+        }
+
+        private static ItemData[] ExtractItemDataFromResultSet(IDataReader reader)
+        {
+            List<ItemData> items = new List<ItemData>();
+            while (reader.Read())
+            {
+                int orderId = Convert.ToInt32(reader["orderId"]);
+                int quantity = Convert.ToInt32(reader["quantity"]);
+                string sku = reader["sku"].ToString();
+                ItemData id = new ItemData(orderId, quantity, sku);
+                items.Add(id);
+            }
+            return items.ToArray();
+        }
+
+        private static SqlCommand BuildItemsForOrderQueryStatement(int orderId)
+        {
+            string sql = @"SELECT * from Items WHERE orderId = @orderId";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@orderId", orderId);
+            return command;
+        }
+
+        #endregion Item
+
+        public static void Clear()
+        {
+            ExecuteSql("DELETE FROM Items");
+            ExecuteSql("DELETE FROM Orders");
+            ExecuteSql("DELETE FROM Products");
+        }
+
+        private static void ExecuteSql(string sql)
+        {
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.ExecuteNonQuery();
         }
 
         public static void Close()

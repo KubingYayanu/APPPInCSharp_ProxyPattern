@@ -20,6 +20,7 @@ namespace APPPInCSharp_ProxyPattern.UnitTests
         public void TearDown()
         {
             DB.DeleteProductData("ProxyTest1");
+            DB.Clear();
             DB.Close();
         }
 
@@ -30,6 +31,20 @@ namespace APPPInCSharp_ProxyPattern.UnitTests
             Assert.AreEqual(456, p.Price);
             Assert.AreEqual("ProxyTestName1", p.Name);
             Assert.AreEqual("ProxyTest1", p.Sku);
+        }
+
+        [Test]
+        public void OrderProxyTotal()
+        {
+            DB.Store(new ProductData("Wheaties", 349, "wheaties"));
+            DB.Store(new ProductData("Crest", 258, "crest"));
+            ProductProxy wheaties = new ProductProxy("wheaties");
+            ProductProxy crest = new ProductProxy("crest");
+            OrderData od = DB.NewOrder("testOrderProxy");
+            OrderProxy order = new OrderProxy(od.orderId);
+            order.AddItem(crest, 1);
+            order.AddItem(wheaties, 2);
+            Assert.AreEqual(956, order.Total);
         }
     }
 }
